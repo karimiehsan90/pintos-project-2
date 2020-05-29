@@ -4,6 +4,8 @@
 #include "filesys/off_t.h"
 
 struct inode;
+/* An open file. */
+
 
 /* Opening and closing files. */
 struct file *file_open (struct inode *);

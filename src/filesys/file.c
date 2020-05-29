@@ -2,6 +2,9 @@
 #include <debug.h>
 #include "filesys/inode.h"
 #include "threads/malloc.h"
+#include "threads/palloc.h"
+#include "threads/thread.h"
+#include <stdio.h>
 
 /* An open file. */
 struct file 
@@ -17,16 +20,18 @@ struct file
 struct file *
 file_open (struct inode *inode) 
 {
-  struct file *file = calloc (1, sizeof *file);
+  struct file *file =  malloc(sizeof(file));   //calloc (1, sizeof *file);
   if (inode != NULL && file != NULL)
     {
       file->inode = inode;
       file->pos = 0;
       file->deny_write = false;
+      //printf("%s called file : %x open! \n",thread_current()->name,file);
       return file;
     }
   else
     {
+      //printf("%s called file : %x open fail! \n",thread_current()->name,file);
       inode_close (inode);
       free (file);
       return NULL; 
@@ -47,6 +52,7 @@ file_close (struct file *file)
 {
   if (file != NULL)
     {
+      //printf("%s called file : %x close! \n",thread_current()->name,file);
       file_allow_write (file);
       inode_close (file->inode);
       free (file); 
@@ -94,6 +100,7 @@ file_read_at (struct file *file, void *buffer, off_t size, off_t file_ofs)
 off_t
 file_write (struct file *file, const void *buffer, off_t size) 
 {
+  //printf("is writable? %d\n",file->deny_write);
   off_t bytes_written = inode_write_at (file->inode, buffer, size, file->pos);
   file->pos += bytes_written;
   return bytes_written;
@@ -123,7 +130,9 @@ file_deny_write (struct file *file)
     {
       file->deny_write = true;
       inode_deny_write (file->inode);
+      //printf("file addr : %x, locked file! : %d\n",(unsigned int)file,file->deny_write);
     }
+  
 }
 
 /* Re-enables write operations on FILE's underlying inode.
